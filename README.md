@@ -1,1 +1,1 @@
-# consulfor 1C
+# consul for 1C
