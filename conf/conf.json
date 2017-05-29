@@ -1,0 +1,10 @@
+{
+  "check": {
+    "id": "checkbase1c",
+    "name": "Search and check base 1C",
+    "script": "script\\check.vbs",
+    "interval": "10s",
+    "timeout": "10s"
+  }
+
+}
