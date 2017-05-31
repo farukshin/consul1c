@@ -1,9 +1,9 @@
-' массив анализируемых информационных баз 1С
 Dim arr_bases
 Dim arr_platform
 Dim prefix
 Dim nodename
-dim ServiceNode()
+Dim ServiceNode()
+Dim counter
 
 arr_bases = Array("buh", "erp", "uh")
 arr_platform = Array("V83")
@@ -11,16 +11,14 @@ prefix = ""
 
 setnodename()
 For Each Platform In arr_platform
+  counter = 0
   Set Connector = CreateObject(Platform & ".COMConnector")
   Set Connection = Connector.ConnectAgent("tcp://localhost")
   Clasters = Connection.GetClusters()
   Set Cluster = Clasters (0)
   Connection.Authenticate Cluster,"",""
   Bases = Connection.GetInfoBases (Cluster)
-  get_service_node(ServiceNode)
-  For Each srv In ServiceNode
-    WScript.echo srv
-  Next
+  get_service_node()
   For Each base1c In Bases
     If inArray(arr_bases, base1c.Name)  >= 0 Then
       If inArray(ServiceNode, base1c.Name) >= 0 Then
@@ -35,6 +33,32 @@ For Each Platform In arr_platform
 Next
 
 WScript.Quit 0
+
+public Function add_service(name, status)
+  On Error Resume Next
+  ' отправляем запрос в consul
+  Err.Clear()
+End Function
+
+
+public Function get_service_node()
+  On Error Resume Next
+  url = "http://localhost:8500/v1/catalog/node/" + nodename + "?pretty" 
+  set json = CreateObject("Chilkat_9_5_0.JsonObject")
+  success = json.Load(GetHTTPResponse(url))
+  Set Services  = json.ObjectOf("Services")
+  numServices = Services.Size
+  For i = 0 To numServices - 1
+    Set srv = Services.ObjectAt(i)
+    If inArray(srv.ArrayOf("Tags"), "1c") Then
+      ReDim preserve ServiceNode(counter)
+      ServiceNode(counter) = srv.StringOf("ID")
+      WScript.echo "!"+ ServiceNode(counter) +"!"
+      counter = counter + 1
+    End If
+  Next
+  Err.Clear()  
+End Function
 
 public Function inArray(arr, obj)
   On Error Resume Next
@@ -56,29 +80,6 @@ public Function setnodename()
   nodename = CreateObject("wscript.network").ComputerName
 End Function
 
-public Function get_service_node(ByRef ServiceNode)
-  On Error Resume Next
-  url = "http://localhost:8500/v1/catalog/node/" + nodename + "?pretty" 
-  set json = CreateObject("Chilkat_9_5_0.JsonObject")
-
-  resp = GetHTTPResponse(url)
-  success = json.Load(resp)
-  Set Services  = json.ObjectOf("Services")
-  numServices = Services.Size
-  For i = 0 To numServices - 1
-    Set srv = Services.ObjectAt(i)
-    If srv.StringOf("Service") = "1c" Then
-      r = srv.StringOf("ID") 
-      AddInArray(ServiceNode, r)
-      'WScript.echo ServiceNode(0)
-    End If
-  Next
-  'WScript.echo "ServiceNode.Size"
-  'WScript.echo ServiceNode.Size
-  Err.Clear()
-  'get_service_node = 1
-End Function
-
 Private Function GetHTTPResponse(sURL)
     Dim oXMLHTTP
     On Error Resume Next
@@ -94,20 +95,3 @@ Private Function GetHTTPResponse(sURL)
     End With
     Set oXMLHTTP = Nothing
 End Function
-
-Function IsNotEmptyArray(ByRef ServiceNode As Variant) As Boolean
-  On Error Resume Next
-  IsNotEmptyArray = LBound(ServiceNode) <= UBound(ServiceNode)
-End Function
-
-Function AddInArray(ByRef ServiceNode, param)
-  On Error Resume Next
-  If IsNotEmptyArray(ServiceNode) Then
-    ReDim Preserve ServiceNode(UBound(ServiceNode) + 1)
-  Else
-    ReDim ServiceNode(0)
-  End If
-  ServiceNode(UBound(ServiceNode)) = srv.StringOf("ID")
-  AddInArray = 1
-End Function
-
