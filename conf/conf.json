@@ -1,13 +1,4 @@
 {
-  "service":{
-    "id": "uh",
-    "name": "1c",
-    "check":{
-      "id": "service:db",
-      "status": "passing"
-    }    
-  },
-
   "check": {
     "id": "checkbase1c",
     "name": "Search and check base 1C",

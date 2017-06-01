@@ -1,0 +1,11 @@
+{
+  "service":{
+    "id": "buh",
+    "name": "buh",
+    "tags": ["1c"],
+    "check":{
+      "id": "service:buh",
+      "status": "passing"
+    }    
+  }
+}

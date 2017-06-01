@@ -1,40 +1,85 @@
-' массив анализируемых информационных баз 1С
-Dim arr_bases
-Dim arr_platform
-Dim prefix
+Dim arrCheckBases
+Dim checkAllBases: checkAllBases = False
+Dim arrCheckPlatform
+Dim prefix: prefix = ""
 Dim nodename
-dim ServiceNode()
+Dim arrServiceNode()
+Dim counter
+Dim Host: Host = "http://localhost:8500"
+Dim arrBaseCluster()
 
-arr_bases = Array("buh", "erp", "uh")
-arr_platform = Array("V83")
-prefix = ""
+arrCheckBases = Array() ' Array("buh", "erp")
+arrCheckPlatform = Array("V83")
 
 setnodename()
-For Each Platform In arr_platform
+For Each Platform In arrCheckPlatform
   Set Connector = CreateObject(Platform & ".COMConnector")
   Set Connection = Connector.ConnectAgent("tcp://localhost")
   Clasters = Connection.GetClusters()
   Set Cluster = Clasters (0)
   Connection.Authenticate Cluster,"",""
-  Bases = Connection.GetInfoBases (Cluster)
-  get_service_node(ServiceNode)
-  For Each srv In ServiceNode
-    WScript.echo srv
-  Next
+  Bases = Connection.GetInfoBases(Cluster)
+  count = 0
   For Each base1c In Bases
-    If inArray(arr_bases, base1c.Name)  >= 0 Then
-      If inArray(ServiceNode, base1c.Name) >= 0 Then
-        ' база существует, проверяем статус
-        ' check_and_set_status(base1c.Name, "pass") 
-      Else:
-        ' добавляем базу в качестве сервиса
-        ' add_service(base1c.Name, "pass")
-      End If
-    End If
+    ReDim preserve arrBaseCluster(count)
+    arrBaseCluster(count) = base1c.Name
+    count = count + 1
   Next
+  
+  If count > 0 Then
+    counter = 0
+    get_service_node()
+
+    For Each base1c In arrBaseCluster
+      If (inArray(arrCheckBases, base1c)  >= 0) OR (checkAllBases = True) Then
+        If inArray(arrServiceNode, base1c) = -1 Then
+          r = setService(base1c, "pass")
+        End If
+      End If
+    Next
+    
+    For Each srvBase1c In arrServiceNode
+      If inArray(arrBaseCluster, srvBase1c) = -1 Then
+        r = setService(srvBase1c, "del")
+      ElseIf inArray(arrCheckBases, srvBase1c)=-1 AND checkAllBases=False Then
+    	  r = setService(srvBase1c, "del")
+      End If
+    Next
+ 
+  End If
 Next
 
 WScript.Quit 0
+
+public Function setService(name, status)
+  On Error Resume Next
+  If status = "pass" Then
+    body = "{""ID"": """+name+""", ""Name"": """+name+""", ""Tags"": [""1c""]}"
+    resp = GetHTTPResponse(Host + "/v1/agent/service/register", "POST", body)
+  ElseIf status = "del" Then
+    resp = GetHTTPResponse(Host + "/v1/agent/service/deregister/" + name, "GET", "")
+  End If
+  Err.Clear()
+End Function
+
+
+public Function get_service_node()
+  On Error Resume Next
+  url = Host + "/v1/catalog/node/" + nodename + "?pretty" 
+  set json = CreateObject("Chilkat_9_5_0.JsonObject")
+  success = json.Load(GetHTTPResponse(url, "GET", ""))
+  Set Services  = json.ObjectOf("Services")
+  numServices = Services.Size
+  For i = 0 To numServices - 1
+    Set srv = Services.ObjectAt(i)
+    If inArray(srv.ArrayOf("Tags"), "1c") Then
+      ReDim preserve arrServiceNode(counter)
+      arrServiceNode(counter) = srv.StringOf("ID")
+      counter = counter + 1
+    End If
+  Next
+  Err.Clear()  
+End Function
 
 public Function inArray(arr, obj)
   On Error Resume Next
@@ -56,58 +101,18 @@ public Function setnodename()
   nodename = CreateObject("wscript.network").ComputerName
 End Function
 
-public Function get_service_node(ByRef ServiceNode)
-  On Error Resume Next
-  url = "http://localhost:8500/v1/catalog/node/" + nodename + "?pretty" 
-  set json = CreateObject("Chilkat_9_5_0.JsonObject")
-
-  resp = GetHTTPResponse(url)
-  success = json.Load(resp)
-  Set Services  = json.ObjectOf("Services")
-  numServices = Services.Size
-  For i = 0 To numServices - 1
-    Set srv = Services.ObjectAt(i)
-    If srv.StringOf("Service") = "1c" Then
-      r = srv.StringOf("ID") 
-      AddInArray(ServiceNode, r)
-      'WScript.echo ServiceNode(0)
-    End If
-  Next
-  'WScript.echo "ServiceNode.Size"
-  'WScript.echo ServiceNode.Size
-  Err.Clear()
-  'get_service_node = 1
-End Function
-
-Private Function GetHTTPResponse(sURL)
+Private Function GetHTTPResponse(sURL, method, body)
     Dim oXMLHTTP
     On Error Resume Next
     Set oXMLHTTP = CreateObject("MSXML2.XMLHTTP")
     With oXMLHTTP
-        .Open "GET", sURL, False
+        .Open method, sURL, False
         .SetRequestHeader "Cache-Control", "max-age=0"
         .SetRequestHeader "User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.41 Safari/537.36 OPR/35.0.2066.10 (Edition beta)"
         .SetRequestHeader "Accept-Encoding", "deflate"
         .SetRequestHeader "Accept-Language", "ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4"
-        .send
+        .send body
         GetHTTPResponse = .responseText
     End With
     Set oXMLHTTP = Nothing
 End Function
-
-Function IsNotEmptyArray(ByRef ServiceNode As Variant) As Boolean
-  On Error Resume Next
-  IsNotEmptyArray = LBound(ServiceNode) <= UBound(ServiceNode)
-End Function
-
-Function AddInArray(ByRef ServiceNode, param)
-  On Error Resume Next
-  If IsNotEmptyArray(ServiceNode) Then
-    ReDim Preserve ServiceNode(UBound(ServiceNode) + 1)
-  Else
-    ReDim ServiceNode(0)
-  End If
-  ServiceNode(UBound(ServiceNode)) = srv.StringOf("ID")
-  AddInArray = 1
-End Function
-
