@@ -1,35 +1,50 @@
-Dim arr_bases
-Dim addAllBases
-Dim arr_platform
-Dim prefix
+Dim arrCheckBases
+Dim checkAllBases: checkAllBases = False
+Dim arrCheckPlatform
+Dim prefix: prefix = ""
 Dim nodename
-Dim ServiceNode()
+Dim arrServiceNode()
 Dim counter
-Dim Host
+Dim Host: Host = "http://localhost:8500"
+Dim arrBaseCluster()
 
-arr_bases = Array("buh", "erp", "uh")
-addAllBases = False
-arr_platform = Array("V83")
-prefix = ""
-Host = "http://localhost:8500"
+arrCheckBases = Array("buh", "erp", "uh")
+arrCheckPlatform = Array("V83")
 
 setnodename()
-For Each Platform In arr_platform
-  counter = 0
+For Each Platform In arrCheckPlatform
   Set Connector = CreateObject(Platform & ".COMConnector")
   Set Connection = Connector.ConnectAgent("tcp://localhost")
   Clasters = Connection.GetClusters()
   Set Cluster = Clasters (0)
   Connection.Authenticate Cluster,"",""
-  Bases = Connection.GetInfoBases (Cluster)
-  get_service_node()
+  Bases = Connection.GetInfoBases(Cluster)
+  count = 0
   For Each base1c In Bases
-    If (inArray(arr_bases, base1c.Name)  >= 0) OR (addAllBases = True) Then
-      If NOT inArray(ServiceNode, base1c.Name) >= 0 Then
-        setService(base1c.Name, "pass")
-      End If
-    End If
+    ReDim preserve arrBaseCluster(count)
+    arrBaseCluster(count) = base1c.Name
+    count = count + 1
   Next
+  
+  If count > 0 Then
+    counter = 0
+    get_service_node()
+
+    For Each base1c In arrBaseCluster
+      If (inArray(arrCheckBases, base1c.Name)  >= 0) OR (checkAllBases = True) Then
+        If NOT inArray(arrServiceNode, base1c.Name) >= 0 Then
+          r = setService(base1c.Name, "pass")
+        End If
+      End If
+    Next
+    
+    For Each srvBase1c In arrServiceNode
+      If inArray(arrBaseCluster, srvBase1c) = -1 Then
+        r = setService(srvBase1c, "del")
+      End If
+    Next
+ 
+  End If
 Next
 
 WScript.Quit 0
@@ -56,9 +71,8 @@ public Function get_service_node()
   For i = 0 To numServices - 1
     Set srv = Services.ObjectAt(i)
     If inArray(srv.ArrayOf("Tags"), "1c") Then
-      ReDim preserve ServiceNode(counter)
-      ServiceNode(counter) = srv.StringOf("ID")
-      WScript.echo "!"+ ServiceNode(counter) +"!"
+      ReDim preserve arrServiceNode(counter)
+      arrServiceNode(counter) = srv.StringOf("ID")
       counter = counter + 1
     End If
   Next
