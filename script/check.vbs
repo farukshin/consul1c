@@ -1,5 +1,5 @@
 Dim arrCheckBases
-Dim checkAllBases: checkAllBases = False
+Dim checkAllBases: checkAllBases = True
 Dim arrCheckPlatform
 Dim prefix: prefix = ""
 Dim nodename
