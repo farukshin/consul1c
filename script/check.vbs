@@ -8,7 +8,7 @@ Dim counter
 Dim Host: Host = "http://localhost:8500"
 Dim arrBaseCluster()
 
-arrCheckBases = Array("buh", "erp", "uh")
+arrCheckBases = Array() ' Array("buh", "erp")
 arrCheckPlatform = Array("V83")
 
 setnodename()
@@ -41,6 +41,8 @@ For Each Platform In arrCheckPlatform
     For Each srvBase1c In arrServiceNode
       If inArray(arrBaseCluster, srvBase1c) = -1 Then
         r = setService(srvBase1c, "del")
+      ElseIf inArray(arrCheckBases, srvBase1c)=-1 AND checkAllBases=False Then
+    	  r = setService(srvBase1c, "del")
       End If
     Next
  

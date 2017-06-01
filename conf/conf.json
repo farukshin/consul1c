@@ -1,14 +1,4 @@
 {
-  "service":{
-    "id": "uh",
-    "name": "uh",
-    "tags": ["1c"],
-    "check":{
-      "id": "service:uh",
-      "status": "passing"
-    }    
-  },
-
   "check": {
     "id": "checkbase1c",
     "name": "Search and check base 1C",
