@@ -31,9 +31,9 @@ For Each Platform In arrCheckPlatform
     get_service_node()
 
     For Each base1c In arrBaseCluster
-      If (inArray(arrCheckBases, base1c.Name)  >= 0) OR (checkAllBases = True) Then
-        If NOT inArray(arrServiceNode, base1c.Name) >= 0 Then
-          r = setService(base1c.Name, "pass")
+      If (inArray(arrCheckBases, base1c)  >= 0) OR (checkAllBases = True) Then
+        If inArray(arrServiceNode, base1c) = -1 Then
+          r = setService(base1c, "pass")
         End If
       End If
     Next
