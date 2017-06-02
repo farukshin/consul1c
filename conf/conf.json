@@ -1,9 +1,6 @@
 {
-  "check": {
-    "id": "checkbase1c",
-    "name": "Search and check base 1C",
-    "script": "script\\check.vbs",
-    "interval": "10s",
-    "timeout": "10s"
-  }
+    "server": true,
+    "data_dir": "data",
+    "start_join": ["10.4.2.3"],
+    "log_level": "INFO"
 }
