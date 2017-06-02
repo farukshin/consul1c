@@ -2,7 +2,7 @@
 
 ### Установка на серверах приложений 1С 
 
-`git clone -b master https://gitgub.com/farukshin/consul1c.git`
+`git clone -b master https://github.com/farukshin/consul1c.git`
 
 Скачать consul.exe с [официального сайта](https://www.consul.io/downloads.html) и положить в папку consul1c
 
