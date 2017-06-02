@@ -1,6 +1,6 @@
 {
-    "datacenter": "epk",
     "server": true,
-    "data_dir": "/opt/consul",
+    "data_dir": "data",
+    "start_join": ["10.4.2.3"],
     "log_level": "INFO"
 }
