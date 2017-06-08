@@ -1,6 +1,12 @@
 {
     "server": true,
+    "datacenter": "Corp",
     "data_dir": "data",
-    "start_join": ["10.4.2.3"],
-    "log_level": "INFO"
+    "start_join": ["10.4.2.4", "10.4.2.5", "10.4.2.6", "10.4.2.7"],
+    "ui": true,
+    "acl_datacenter": "Corp",
+    "acl_token": "removed-for-safety",
+    "acl_default_policy": "allow",
+    "acl_down_policy": "extend-cache",
+    "acl_master_token": "removed-for-safety"
 }
